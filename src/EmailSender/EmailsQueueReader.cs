@@ -13,8 +13,9 @@ namespace EmailSender
 
         private readonly IBaseSettings _settings;
         private readonly CloudQueue _queue;
+        private readonly MessageHandler _messageHandler;
 
-        public EmailsQueueReader(IBaseSettings settings, ILog logger) : this("EmailsQueueReader", TimerPeriodSeconds * 1000, logger)
+        public EmailsQueueReader(IBaseSettings settings, ILog logger, MessageHandler messageHandler) : this("EmailsQueueReader", TimerPeriodSeconds * 1000, logger)
         {
             _settings = settings;
 
@@ -22,6 +23,7 @@ namespace EmailSender
             var queueClient = storageAccount.CreateCloudQueueClient();
             var queue = queueClient.GetQueueReference("emailsqueue");
             _queue = queue;
+            _messageHandler = messageHandler;
         }
 
         private EmailsQueueReader(string componentName, int periodMs, ILog log)
@@ -31,13 +33,11 @@ namespace EmailSender
 
         protected override async Task Execute()
         {
-            var handler = new MessageHandler(_settings.TemplatesLink);
-
             var queueData = await _queue.GetMessageAsync();
 
             while (queueData != null)
             {
-                var result = await handler.HandleMessage(queueData);
+                var result = await _messageHandler.HandleMessage(queueData);
                 if (result)
                     await _queue.DeleteMessageAsync(queueData);
 

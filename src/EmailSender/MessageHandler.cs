@@ -10,16 +10,20 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Reflection;
 using System.Net;
+using EmailSender.Messages;
+using EmailSender.Settings;
 
 namespace EmailSender
 {
     public class MessageHandler
     {
-        private readonly string _templatesLink;
+        private readonly IBaseSettings _settings;
+        private readonly IEmailSender _emailSender;
 
-        public MessageHandler(string templatesLink)
+        public MessageHandler(IBaseSettings settings, IEmailSender emailSender)
         {
-            _templatesLink = templatesLink;
+            _settings = settings;
+            _emailSender = emailSender;
         }
 
         public async Task<bool> HandleMessage(CloudQueueMessage message)
@@ -74,8 +78,16 @@ namespace EmailSender
 
             var emailBody = InsertData(html, initiativeModel);
 
-            Console.WriteLine(emailBody);
-            //await _smtp.SendEmailAsync(plainTextEmail.Data.EmailAddress, plainTextEmail.Data.MessageData.Subject,emailBody);
+            var email = new Email
+            {
+                To = new List<string> { plainTextEmail.Data.EmailAddress },
+                Subject = plainTextEmail.Data.MessageData.Subject,
+                IsHtml = true,
+                Body = emailBody
+
+            };
+
+            _emailSender.Send(email);
         }
 
         private async Task SendCompetition(CompetitionEmail plainTextEmail)
@@ -85,8 +97,16 @@ namespace EmailSender
 
             var emailBody = InsertData(html, competitionModel);
 
-            Console.WriteLine(emailBody);
-            //await _smtp.SendEmailAsync(plainTextEmail.Data.EmailAddress, plainTextEmail.Data.MessageData.Subject,emailBody);
+            var email = new Email
+            {
+                To = new List<string> { plainTextEmail.Data.EmailAddress },
+                Subject = plainTextEmail.Data.MessageData.Subject,
+                IsHtml = true,
+                Body = emailBody
+
+            };
+
+            _emailSender.Send(email);
         }
 
         private async Task SendImplementation(ImplementationEmail plainTextEmail)
@@ -96,8 +116,16 @@ namespace EmailSender
 
             var emailBody = InsertData(html, implementationModel);
 
-            Console.WriteLine(emailBody);
-            //await _smtp.SendEmailAsync(plainTextEmail.Data.EmailAddress, plainTextEmail.Data.MessageData.Subject,emailBody);
+            var email = new Email
+            {
+                To = new List<string> { plainTextEmail.Data.EmailAddress },
+                Subject = plainTextEmail.Data.MessageData.Subject,
+                IsHtml = true,
+                Body = emailBody
+
+            };
+
+            _emailSender.Send(email);
         }
 
         private async Task SendVoting(VotingEmail plainTextEmail)
@@ -107,13 +135,21 @@ namespace EmailSender
 
             var emailBody = InsertData(html, votingModel);
 
-            Console.WriteLine(emailBody);
-            //await _smtp.SendEmailAsync(plainTextEmail.Data.EmailAddress, plainTextEmail.Data.MessageData.Subject,emailBody);
+            var email = new Email
+            {
+                To = new List<string> { plainTextEmail.Data.EmailAddress },
+                Subject = plainTextEmail.Data.MessageData.Subject,
+                IsHtml = true,
+                Body = emailBody
+
+            };
+
+            _emailSender.Send(email);
         }
 
         private async Task<string> GetHtmlTemplate(string templateName)
         {
-            var req = WebRequest.Create(_templatesLink + templateName + ".html");
+            var req = WebRequest.Create(_settings.TemplatesLink + templateName + ".html");
             req.Method = "GET";
 
             string source;
